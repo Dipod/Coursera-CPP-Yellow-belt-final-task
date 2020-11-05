@@ -1,0 +1,663 @@
+Введение
+
+В курсе «Белый пояс по С++» финальным заданием была разработка базы данных,
+которая работала с парами (дата, событие). В этой задаче вам нужно развить эту базу данных,
+научив её выбирать и удалять события, удовлетворяющие заданному условию, а также разделив её код на несколько файлов.
+
+Более подробно, ваша программа должна уметь обрабатывать набор команд:
+
+    * Add date event — добавить в базу данных пару (date, event);
+    * Print — вывести всё содержимое базы данных;
+    * Find condition — вывести все записи, содержащиеся в базе данных, которые удовлетворяют условию condition;
+    * Del condition — удалить из базы все записи, которые удовлетворяют условию condition;
+    * Last date — вывести запись с последним событием, случившимся не позже данной даты.
+
+Условия в командах Find и Del накладывают определённые ограничения на даты и события, например:
+
+    * Find date < 2017-11-06 — найти все события, которые случились раньше 6 ноября 2017 года;
+    * Del event != "holiday" — удалить из базы все события, кроме «holiday»;
+    * Find date >= 2017-01-01 AND date < 2017-07-01 AND event == "sport event" — найти всё события «sport event»,
+    	случившиеся в первой половине 2017 года;
+    * Del date < 2017-01-01 AND (event == "holiday" OR event == "sport event") — удалить из базы все события «holiday» и «sport event»,
+    	случившиеся до 2017 года.
+
+В командах обоих типов условия могут быть пустыми: под такое условие попадают все события.
+
+Структура программы
+
+Ниже вам даны заготовки для файлов
+
+    * condition_parser.h/cpp — в видеолекции «Задача разбора арифметического выражения.
+    	Описание решения» мы продемонстрировали построение абстрактного синтаксического дерева для арифметических выражений.
+    	Реализация этого алгоритма для разбора условий в командах Find и Del содержится в функции ParseCondition,
+    	объявленной и полностью реализованной в файлах condition_parser.h/cpp;
+    * token.h/cpp — содержат готовый токенизатор, который используется в функции ParseCondition;
+    * main.cpp — содержит готовую функцию main.
+
+Вам нужно проанализировать выданный код и разработать недостающие классы и функции:
+
+    * класс Database, который представляет собой базу данных, — вы должны сами создать его публичный интерфейс,
+    	основываясь на том, как он используется в функции main;
+    * классы Node, EmptyNode, DateComparisonNode, EventComparisonNode и LogicalOperationNode —
+    	сформировать их иерархию и публичный интерфейс вам поможет анализ функций main и ParseCondition;
+    * класс Date, а также функцию ParseDate и оператор вывода в поток для класса Date.
+
+На проверку вы должны прислать архив, состоящий из файлов:
+
+    * date.h/cpp — эти файлы должны содержать объявления и определения класса Date,
+    	функции ParseDate и оператора вывода в поток для класса Date;
+    * database.h/cpp — эти файлы должны содержать объявление и определение класса Database;
+    * node.h/cpp — эти файлы должны содержать объявления и определения класса Node,
+    	а также всех его потомков (см. выше), которые представляют собой узлы абстрактного синтаксического дерева,
+    	формируемого функцией ParseCondition;
+    * condition_parser.h/cpp;
+    * token.h/cpp;
+    * main.cpp;
+    * другие .h- и .cpp-файлы, которые вы посчитаете нужным создать в своём решении.
+
+Как будет тестироваться ваше решение
+
+Тестирование вашего решения будет выполняться в два этапа.
+На первом этапе автоматическая тестирующая система распакует присланный вами архив и соберёт извлечённые файлы в исполняемый файл.
+Затем этот исполняемый файл будет запущен на наборе тестов.
+Тестирование выполняется так же, как и для большинства задач на нашем курсе — тест подаётся в stdin,
+замеряется время выполнения программы, а затем анализируется stdout.
+
+На втором этапе будет выполняться тестирование отдельных файлов вашего проекта.
+Проверяется, что файл date.h действительно содержит объявление класса Date,
+что Database::FindIf корректно выполняет поиск по переданному предикату и т.д.
+Мы ожидаем от ваших классов интерфейс, который зафиксирован в функции main.
+Поэтому в классах Database и Node делайте у методов именно те сигнатуры, которые используются в функции main.
+
+Формат ввода и вывода
+
+В стандартном вводе содержатся команды для работы с базой данных, по одной команде в строке.
+Ваша программа должна считать их и вывести результаты обработки в стандартный вывод.
+Правила обработки команд приведены ниже.
+
+Команда Add
+
+Встретив команду Add date event, ваша программа должна добавить пару (date, event) в базу данных
+и затем показывать её при поиске (команда Find) или печати (команда Print).
+Одинаковые события, произошедшие в один и тот же день, сохранять не нужно:
+добавление в базу уже существующей пары (date, event) должно игнорироваться.
+В одну и ту же дату может произойти много разных событий, БД должна суметь их все сохранить.
+
+Гарантируется, что поле date в команде Add имеет формат «Год-Месяц-День», где Год — это целое число от 0 до 9999,
+Месяц — это номер месяца от 1 до 12 включительно, День — это номер дня от 1 до 31 включительно.
+После даты обязательно следует пробел, отделяющий её от события. Примеры корректных дат: 2017-11-07, 0-2-31.
+
+Вся остальная часть строки в команде Add задаёт событие. Оно может содержать пробелы,
+поэтому для его считывания удобно воспользоваться функцией getline. При этом гарантируется,
+что название события не может содержать символ кавычки ("). Таким образом,
+этот символ может встретиться лишь в условии в командах Find и Del, являясь ограничителем названия события.
+
+Пример
+
+Для команды Add 2017-11-07 big sport event программа должна добавить в базу данных пару (2017-11-07, big sport event).
+
+Команда Del
+
+Встретив команду Del condition, ваша программа должна удалить из базы данных все события,
+удовлетворяющие условию condition, и вывести в стандартный вывод количество удалённых записей N в формате «Removed N entries».
+Если условие пусто, результатом выполнения команды должна стать очистка всей базы данных.
+
+Пример
+
+Ввод
+
+Add 2017-06-01 1st of June
+Add 2017-07-08 8th of July
+Add 2017-07-08 Someone's birthday
+Del date == 2017-07-08
+
+Вывод
+
+Removed 2 entries
+
+Команда Print
+
+Встретив команду Print, ваша программа должна вывести все пары (дата, событие),
+которые в данный момент содержатся в базе данных. Пары надо выводить по одной в строке.
+Они должны быть отсортированы по дате по возрастанию.
+События в рамках одной даты необходимо выводить в порядке добавления
+(за исключением уже удалённых и попыток добавления повторов).
+
+Даты надо выводить в формате ГГГГ-ММ-ДД, где Г, М, Д — это цифры чисел года, месяца и дня соответственно.
+Если какое-то число имеет меньше разрядов, чем нужно, его надо дополнить нулями,
+например: 0001-01-01 — первое января первого года.
+
+Пример
+
+Ввод
+
+Add 2017-01-01 Holiday
+Add 2017-03-08 Holiday
+Add 2017-1-1 New Year
+Add 2017-1-1 New Year
+Print
+
+Вывод
+
+2017-01-01 Holiday
+2017-01-01 New Year
+2017-03-08 Holiday
+
+Обратите внимание, что событие "New Year" выведено только один раз, несмотря на то, что оно добавлено дважды.
+Как сказано в описании команды Add, одинаковые события, произошедшие в один и тот же день, сохранять не нужно.
+
+Команда Find
+
+Встретив команду Find condition, ваша программа должна вывести все пары (дата, событие),
+которые в данный момент содержатся в базе данных и удовлетворяют условию condition.
+Формат вывода аналогичен команде Print. Поиск с пустым условием эквивалентен команде Print.
+В конце команда должна вывести строку Found N entries, где N— количество найденных пар.
+
+Пример
+
+Ввод
+
+Add 2017-01-01 Holiday
+Add 2017-03-08 Holiday
+Add 2017-01-01 New Year
+Find event != "working day"
+Add 2017-05-09 Holiday
+
+Вывод
+
+2017-01-01 Holiday
+2017-01-01 New Year
+2017-03-08 Holiday
+Found 3 entries
+
+Команда Last
+
+По команде Last date нужно вывести последнее из событий, случившихся к дате date. Более формально:
+
+    * среди всех имеющихся дат событий нужно найти наибольшую, не превосходящую date;
+    * из всех событий с такой датой нужно выбрать последнее добавленное и вывести в формате, аналогичном формату команды Print;
+    * если date меньше всех имеющихся дат, необходимо вывести «No entries».
+
+Пример
+
+Ввод
+
+Add 2017-01-01 New Year
+Add 2017-03-08 Holiday
+Add 2017-01-01 Holiday
+Last 2016-12-31
+Last 2017-01-01
+Last 2017-06-01
+Add 2017-05-09 Holiday
+
+Вывод
+
+No entries
+2017-01-01 Holiday
+2017-03-08 Holiday
+
+Пример
+
+Ввод
+
+Add 2017-11-21 Tuesday
+Add 2017-11-20 Monday
+Add 2017-11-21 Weekly meeting
+Print
+Find event != "Weekly meeting"
+Last 2017-11-30
+Del date > 2017-11-20
+Last 2017-11-30
+Last 2017-11-01
+
+Вывод
+
+2017-11-20 Monday
+2017-11-21 Tuesday
+2017-11-21 Weekly meeting
+2017-11-20 Monday
+2017-11-21 Tuesday
+Found 2 entries
+2017-11-21 Weekly meeting
+Removed 2 entries
+2017-11-20 Monday
+No entries
+
+Заготовки файлов
+
+token.h
+
+#pragma once
+
+#include <sstream>
+#include <vector>
+using namespace std;
+
+enum class TokenType {
+  DATE,
+  EVENT,
+  COLUMN,
+  LOGICAL_OP,
+  COMPARE_OP,
+  PAREN_LEFT,
+  PAREN_RIGHT,
+};
+
+struct Token {
+  const string value;
+  const TokenType type;
+};
+
+vector<Token> Tokenize(istream& cl);
+
+token.cpp
+
+#include "token.h"
+
+#include <stdexcept>
+
+using namespace std;
+
+vector<Token> Tokenize(istream& cl) {
+  vector<Token> tokens;
+
+  char c;
+  while (cl >> c) {
+    if (isdigit(c)) {
+      string date(1, c);
+      for (int i = 0; i < 3; ++i) {
+        while (isdigit(cl.peek())) {
+          date += cl.get();
+        }
+        if (i < 2) {
+          date += cl.get(); // Consume '-'
+        }
+      }
+      tokens.push_back({date, TokenType::DATE});
+    } else if (c == '"') {
+      string event;
+      getline(cl, event, '"');
+      tokens.push_back({event, TokenType::EVENT});
+    } else if (c == 'd') {
+      if (cl.get() == 'a' && cl.get() == 't' && cl.get() == 'e') {
+        tokens.push_back({"date", TokenType::COLUMN});
+      } else {
+        throw logic_error("Unknown token");
+      }
+    } else if (c == 'e') {
+      if (cl.get() == 'v' && cl.get() == 'e' && cl.get() == 'n' &&
+          cl.get() == 't') {
+        tokens.push_back({"event", TokenType::COLUMN});
+      } else {
+        throw logic_error("Unknown token");
+      }
+    } else if (c == 'A') {
+      if (cl.get() == 'N' && cl.get() == 'D') {
+        tokens.push_back({"AND", TokenType::LOGICAL_OP});
+      } else {
+        throw logic_error("Unknown token");
+      }
+    } else if (c == 'O') {
+      if (cl.get() == 'R') {
+        tokens.push_back({"OR", TokenType::LOGICAL_OP});
+      } else {
+        throw logic_error("Unknown token");
+      }
+    } else if (c == '(') {
+      tokens.push_back({"(", TokenType::PAREN_LEFT});
+    } else if (c == ')') {
+      tokens.push_back({")", TokenType::PAREN_RIGHT});
+    } else if (c == '<') {
+      if (cl.peek() == '=') {
+        cl.get();
+        tokens.push_back({"<=", TokenType::COMPARE_OP});
+      } else {
+        tokens.push_back({"<", TokenType::COMPARE_OP});
+      }
+    } else if (c == '>') {
+      if (cl.peek() == '=') {
+        cl.get();
+        tokens.push_back({">=", TokenType::COMPARE_OP});
+      } else {
+        tokens.push_back({">", TokenType::COMPARE_OP});
+      }
+    } else if (c == '=') {
+      if (cl.get() == '=') {
+        tokens.push_back({"==", TokenType::COMPARE_OP});
+      } else {
+        throw logic_error("Unknown token");
+      }
+    } else if (c == '!') {
+      if (cl.get() == '=') {
+        tokens.push_back({"!=", TokenType::COMPARE_OP});
+      } else {
+        throw logic_error("Unknown token");
+      }
+    }
+  }
+
+  return tokens;
+}
+
+condition_parser.h
+
+#pragma once
+
+#include "node.h"
+
+#include <memory>
+#include <iostream>
+
+using namespace std;
+
+shared_ptr<Node> ParseCondition(istream& is);
+
+void TestParseCondition();
+
+condition_parser.cpp
+
+#include "condition_parser.h"
+#include "token.h"
+
+#include <map>
+using namespace std;
+
+template <class It> shared_ptr<Node> ParseComparison(It& current, It end) {
+  if (current == end) {
+    throw logic_error("Expected column name: date or event");
+  }
+
+  Token& column = *current;
+  if (column.type != TokenType::COLUMN) {
+    throw logic_error("Expected column name: date or event");
+  }
+  ++current;
+
+  if (current == end) {
+    throw logic_error("Expected comparison operation");
+  }
+
+  Token& op = *current;
+  if (op.type != TokenType::COMPARE_OP) {
+    throw logic_error("Expected comparison operation");
+  }
+  ++current;
+
+  if (current == end) {
+    throw logic_error("Expected right value of comparison");
+  }
+
+  Comparison cmp;
+  if (op.value == "<") {
+    cmp = Comparison::Less;
+  } else if (op.value == "<=") {
+    cmp = Comparison::LessOrEqual;
+  } else if (op.value == ">") {
+    cmp = Comparison::Greater;
+  } else if (op.value == ">=") {
+    cmp = Comparison::GreaterOrEqual;
+  } else if (op.value == "==") {
+    cmp = Comparison::Equal;
+  } else if (op.value == "!=") {
+    cmp = Comparison::NotEqual;
+  } else {
+    throw logic_error("Unknown comparison token: " + op.value);
+  }
+
+  const string& value = current->value;
+  ++current;
+
+  if (column.value == "date") {
+    istringstream is(value);
+    return make_shared<DateComparisonNode>(cmp, ParseDate(is));
+  } else {
+    return make_shared<EventComparisonNode>(cmp, value);
+  }
+}
+
+template <class It>
+shared_ptr<Node> ParseExpression(It& current, It end, unsigned precedence) {
+  if (current == end) {
+    return shared_ptr<Node>();
+  }
+
+  shared_ptr<Node> left;
+
+  if (current->type == TokenType::PAREN_LEFT) {
+    ++current; // consume '('
+    left = ParseExpression(current, end, 0u);
+    if (current == end || current->type != TokenType::PAREN_RIGHT) {
+      throw logic_error("Missing right paren");
+    }
+    ++current; // consume ')'
+  } else {
+    left = ParseComparison(current, end);
+  }
+
+  const map<LogicalOperation, unsigned> precedences = {
+      {LogicalOperation::Or, 1}, {LogicalOperation::And, 2}
+  };
+
+  while (current != end && current->type != TokenType::PAREN_RIGHT) {
+    if (current->type != TokenType::LOGICAL_OP) {
+      throw logic_error("Expected logic operation");
+    }
+
+    const auto logical_operation = current->value == "AND" ? LogicalOperation::And
+                                                           : LogicalOperation::Or;
+    const auto current_precedence = precedences.at(logical_operation);
+    if (current_precedence <= precedence) {
+      break;
+    }
+
+    ++current; // consume op
+
+    left = make_shared<LogicalOperationNode>(
+        logical_operation, left, ParseExpression(current, end, current_precedence)
+    );
+  }
+
+  return left;
+}
+
+shared_ptr<Node> ParseCondition(istream& is) {
+  auto tokens = Tokenize(is);
+  auto current = tokens.begin();
+  auto top_node = ParseExpression(current, tokens.end(), 0u);
+
+  if (!top_node) {
+    top_node = make_shared<EmptyNode>();
+  }
+
+  if (current != tokens.end()) {
+    throw logic_error("Unexpected tokens after condition");
+  }
+
+  return top_node;
+}
+
+condition_parser_test.cpp
+
+#include "condition_parser.h"
+#include "test_runner.h"
+
+#include <sstream>
+using namespace std;
+
+void TestParseCondition() {
+  {
+    istringstream is("date != 2017-11-18");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({2017, 1, 1}, ""), "Parse condition 1");
+    Assert(!root->Evaluate({2017, 11, 18}, ""), "Parse condition 2");
+  }
+  {
+    istringstream is(R"(event == "sport event")");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({2017, 1, 1}, "sport event"), "Parse condition 3");
+    Assert(!root->Evaluate({2017, 1, 1}, "holiday"), "Parse condition 4");
+  }
+  {
+    istringstream is("date >= 2017-01-01 AND date < 2017-07-01");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({2017, 1, 1}, ""), "Parse condition 5");
+    Assert(root->Evaluate({2017, 3, 1}, ""), "Parse condition 6");
+    Assert(root->Evaluate({2017, 6, 30}, ""), "Parse condition 7");
+    Assert(!root->Evaluate({2017, 7, 1}, ""), "Parse condition 8");
+    Assert(!root->Evaluate({2016, 12, 31}, ""), "Parse condition 9");
+  }
+  {
+    istringstream is(R"(event != "sport event" AND event != "Wednesday")");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({2017, 1, 1}, "holiday"), "Parse condition 10");
+    Assert(!root->Evaluate({2017, 1, 1}, "sport event"), "Parse condition 11");
+    Assert(!root->Evaluate({2017, 1, 1}, "Wednesday"), "Parse condition 12");
+  }
+  {
+    istringstream is(R"(event == "holiday AND date == 2017-11-18")");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(!root->Evaluate({2017, 11, 18}, "holiday"), "Parse condition 13");
+    Assert(!root->Evaluate({2017, 11, 18}, "work day"), "Parse condition 14");
+    Assert(root->Evaluate({1, 1, 1}, "holiday AND date == 2017-11-18"), "Parse condition 15");
+  }
+  {
+    istringstream is(R"(((event == "holiday" AND date == 2017-01-01)))");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({2017, 1, 1}, "holiday"), "Parse condition 16");
+    Assert(!root->Evaluate({2017, 1, 2}, "holiday"), "Parse condition 17");
+  }
+  {
+    istringstream is(R"(date > 2017-01-01 AND (event == "holiday" OR date < 2017-07-01))");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(!root->Evaluate({2016, 1, 1}, "holiday"), "Parse condition 18");
+    Assert(root->Evaluate({2017, 1, 2}, "holiday"), "Parse condition 19");
+    Assert(root->Evaluate({2017, 1, 2}, "workday"), "Parse condition 20");
+    Assert(!root->Evaluate({2018, 1, 2}, "workday"), "Parse condition 21");
+  }
+  {
+    istringstream is(R"(date > 2017-01-01 AND event == "holiday" OR date < 2017-07-01)");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({2016, 1, 1}, "event"), "Parse condition 22");
+    Assert(root->Evaluate({2017, 1, 2}, "holiday"), "Parse condition 23");
+    Assert(root->Evaluate({2017, 1, 2}, "workday"), "Parse condition 24");
+    Assert(!root->Evaluate({2018, 1, 2}, "workday"), "Parse condition 25");
+  }
+  {
+    istringstream is(R"(((date == 2017-01-01 AND event == "holiday")))");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({2017, 1, 1}, "holiday"), "Parse condition 26");
+    Assert(!root->Evaluate({2017, 1, 2}, "holiday"), "Parse condition 27");
+  }
+  {
+    istringstream is(R"(((event == "2017-01-01" OR date > 2016-01-01)))");
+    shared_ptr<Node> root = ParseCondition(is);
+    Assert(root->Evaluate({1, 1, 1}, "2017-01-01"), "Parse condition 28");
+    Assert(!root->Evaluate({2016, 1, 1}, "event"), "Parse condition 29");
+    Assert(root->Evaluate({2016, 1, 2}, "event"), "Parse condition 30");
+  }
+}
+
+main.cpp
+
+#include "database.h"
+#include "date.h"
+#include "condition_parser.h"
+#include "node.h"
+#include "test_runner.h"
+
+#include <iostream>
+#include <stdexcept>
+
+using namespace std;
+
+string ParseEvent(istream& is) {
+  // Реализуйте эту функцию
+}
+
+void TestAll();
+
+int main() {
+  TestAll();
+
+  Database db;
+
+  for (string line; getline(cin, line); ) {
+    istringstream is(line);
+
+    string command;
+    is >> command;
+    if (command == "Add") {
+      const auto date = ParseDate(is);
+      const auto event = ParseEvent(is);
+      db.Add(date, event);
+    } else if (command == "Print") {
+      db.Print(cout);
+    } else if (command == "Del") {
+      auto condition = ParseCondition(is);
+      auto predicate = [condition](const Date& date, const string& event) {
+        return condition->Evaluate(date, event);
+      };
+      int count = db.RemoveIf(predicate);
+      cout << "Removed " << count << " entries" << endl;
+    } else if (command == "Find") {
+      auto condition = ParseCondition(is);
+      auto predicate = [condition](const Date& date, const string& event) {
+        return condition->Evaluate(date, event);
+      };
+
+      const auto entries = db.FindIf(predicate);
+      for (const auto& entry : entries) {
+        cout << entry << endl;
+      }
+      cout << "Found " << entries.size() << " entries" << endl;
+    } else if (command == "Last") {
+      try {
+          cout << db.Last(ParseDate(is)) << endl;
+      } catch (invalid_argument&) {
+          cout << "No entries" << endl;
+      }
+    } else if (command.empty()) {
+      continue;
+    } else {
+      throw logic_error("Unknown command: " + command);
+    }
+  }
+
+  return 0;
+}
+
+void TestParseEvent() {
+  {
+    istringstream is("event");
+    AssertEqual(ParseEvent(is), "event", "Parse event without leading spaces");
+  }
+  {
+    istringstream is("   sport event ");
+    AssertEqual(ParseEvent(is), "sport event ", "Parse event with leading spaces");
+  }
+  {
+    istringstream is("  first event  \n  second event");
+    vector<string> events;
+    events.push_back(ParseEvent(is));
+    events.push_back(ParseEvent(is));
+    AssertEqual(events, vector<string>{"first event  ", "second event"}, "Parse multiple events");
+  }
+}
+
+void TestAll() {
+  TestRunner tr;
+  tr.RunTest(TestParseEvent, "TestParseEvent");
+  tr.RunTest(TestParseCondition, "TestParseCondition");
+}
+
+Обратите внимание, что в файле main.cpp мы используем наш фреймворк юнит-тестов,
+для тестирования функций ParseCondition и ParseEvent.
+В процессе работы над проектом вы можете разрабатывать свои тесты и добавлять их в функцию TestAll.
+
+Подсказки
+
+Для этой задачи есть набор подсказок, которые должны помочь вам с решением.
+Если вам не удаётся решить задачу и вы чувствуете, что у вас кончились идеи, вы можете ими воспользоваться.
+Но сначала обязательно попробуйте решить задачу без подсказок. 
+
+Подсказки лежат в папке Hints этого репозитория
