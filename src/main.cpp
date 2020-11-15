@@ -7,10 +7,11 @@
 #include <iostream>
 #include <stdexcept>
 
-using namespace std;
-
-string ParseEvent(istream &is) {
-	// Реализуйте эту функцию
+std::string ParseEvent(std::istream &is) {
+	std::string line;
+	getline(is, line);
+	auto pos = line.find_first_not_of(' ');
+	return line.substr(pos);
 }
 
 void TestAll();
@@ -20,47 +21,47 @@ int main() {
 
 	Database db;
 
-	for (string line; getline(cin, line);) {
-		istringstream is(line);
+	for (std::string line; getline(cin, line);) {
+		std::istringstream is(line);
 
-		string command;
+		std::string command;
 		is >> command;
 		if (command == "Add") {
 			const auto date = ParseDate(is);
 			const auto event = ParseEvent(is);
 			db.Add(date, event);
 		} else if (command == "Print") {
-			db.Print(cout);
+			db.Print(std::cout);
 		} else if (command == "Del") {
 			auto condition = ParseCondition(is);
 			auto predicate = [condition](const Date &date,
-					const string &event) {
+					const std::string &event) {
 				return condition->Evaluate(date, event);
 			};
 			int count = db.RemoveIf(predicate);
-			cout << "Removed " << count << " entries" << endl;
+			std::cout << "Removed " << count << " entries" << std::endl;
 		} else if (command == "Find") {
 			auto condition = ParseCondition(is);
 			auto predicate = [condition](const Date &date,
-					const string &event) {
+					const std::string &event) {
 				return condition->Evaluate(date, event);
 			};
 
 			const auto entries = db.FindIf(predicate);
 			for (const auto &entry : entries) {
-				cout << entry << endl;
+				std::cout << entry << std::endl;
 			}
-			cout << "Found " << entries.size() << " entries" << endl;
+			std::cout << "Found " << entries.size() << " entries" << std::endl;
 		} else if (command == "Last") {
 			try {
-				cout << db.Last(ParseDate(is)) << endl;
-			} catch (invalid_argument&) {
-				cout << "No entries" << endl;
+				std::cout << db.Last(ParseDate(is)) << std::endl;
+			} catch (std::invalid_argument&) {
+				std::cout << "No entries" << std::endl;
 			}
 		} else if (command.empty()) {
 			continue;
 		} else {
-			throw logic_error("Unknown command: " + command);
+			throw std::logic_error("Unknown command: " + command);
 		}
 	}
 
@@ -69,21 +70,21 @@ int main() {
 
 void TestParseEvent() {
 	{
-		istringstream is("event");
+		std::istringstream is("event");
 		AssertEqual(ParseEvent(is), "event",
 				"Parse event without leading spaces");
 	}
 	{
-		istringstream is("   sport event ");
+		std::istringstream is("   sport event ");
 		AssertEqual(ParseEvent(is), "sport event ",
 				"Parse event with leading spaces");
 	}
 	{
-		istringstream is("  first event  \n  second event");
-		vector<string> events;
+		std::istringstream is("  first event  \n  second event");
+		std::vector<std::string> events;
 		events.push_back(ParseEvent(is));
 		events.push_back(ParseEvent(is));
-		AssertEqual(events, vector<string> { "first event  ", "second event" },
+		AssertEqual(events, std::vector<std::string> { "first event  ", "second event" },
 				"Parse multiple events");
 	}
 }
