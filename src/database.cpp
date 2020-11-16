@@ -17,31 +17,35 @@ void Database::Print(std::ostream &output) const {
 	}
 }
 
-int Database::RemoveIf(const std::function<bool(Date, std::string)> &predicate) {
-	int DeleteCounter = 0;
+int Database::RemoveIf(
+		const std::function<bool(Date, std::string)> &predicate) {
+	size_t DeleteCounter = 0;
 	std::vector<Date> DatesForErase;
-	for (const auto &day : db) {
-		std::vector<std::string> UndeletedEvents;
-		for (const auto &event : day.second) {
-			if (predicate(day.first, event)) {
-				DeleteCounter++;
-			} else {
-				UndeletedEvents.push_back(event);
+	for (auto &day : db) {
+		auto it = std::stable_partition(day.second.begin(), day.second.end(),
+				[&predicate, &day](const auto &event) {
+					return !predicate(day.first, event);
+				});
+
+		if (it == day.second.begin()) {
+			DatesForErase.push_back(day.first);
+			DeleteCounter += day.second.size();
+		} else {
+			int numberOfDeletions = day.second.end() - it;
+			DeleteCounter += numberOfDeletions;
+			for (int i = 0; i < numberOfDeletions; i++) {
+				day.second.pop_back();
 			}
 		}
-		if (UndeletedEvents.size() == 0) {
-			DatesForErase.push_back(day.first);
-		} else {
-			db[day.first] = UndeletedEvents;
-		}
 	}
-	for(const auto &date : DatesForErase){
+	for (const auto &date : DatesForErase) {
 		db.erase(date);
 	}
 	return DeleteCounter;
 }
 
-std::vector<std::string> Database::FindIf(const std::function<bool(Date, std::string)> &predicate) const {
+std::vector<std::string> Database::FindIf(
+		const std::function<bool(Date, std::string)> &predicate) const {
 	std::vector<std::string> result;
 	for (const auto &day : db) {
 		for (const auto &event : day.second) {
