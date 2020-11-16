@@ -17,6 +17,44 @@ void Database::Print(std::ostream &output) const {
 	}
 }
 
+int Database::RemoveIf(const std::function<bool(Date, std::string)> &predicate) {
+	int DeleteCounter = 0;
+	std::vector<Date> DatesForErase;
+	for (const auto &day : db) {
+		std::vector<std::string> UndeletedEvents;
+		for (const auto &event : day.second) {
+			if (predicate(day.first, event)) {
+				DeleteCounter++;
+			} else {
+				UndeletedEvents.push_back(event);
+			}
+		}
+		if (UndeletedEvents.size() == 0) {
+			DatesForErase.push_back(day.first);
+		} else {
+			db[day.first] = UndeletedEvents;
+		}
+	}
+	for(const auto &date : DatesForErase){
+		db.erase(date);
+	}
+	return DeleteCounter;
+}
+
+std::vector<std::string> Database::FindIf(const std::function<bool(Date, std::string)> &predicate) const {
+	std::vector<std::string> result;
+	for (const auto &day : db) {
+		for (const auto &event : day.second) {
+			if (predicate(day.first, event)) {
+				std::ostringstream entry;
+				entry << day.first << ' ' << event;
+				result.push_back(entry.str());
+			}
+		}
+	}
+	return result;
+}
+
 std::string Database::Last(const Date &date) const {
 	auto it = db.lower_bound(date);
 	std::stringstream result;
