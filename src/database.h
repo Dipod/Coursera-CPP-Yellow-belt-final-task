@@ -4,6 +4,7 @@
 #include <map>
 #include <iostream>
 #include <algorithm>
+#include <functional>
 #include "date.h"
 
 class Database {
