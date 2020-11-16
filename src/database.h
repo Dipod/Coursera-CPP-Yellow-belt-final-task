@@ -13,15 +13,31 @@ public:
 
 	template<typename T>
 	int RemoveIf(T &predicate) {
-		return 0;
+		int DeleteCounter = 0;
+		for (const auto &day : db) {
+			std::vector<std::string> UndeletedEvents;
+			for (const auto &event : day.second) {
+				if (predicate(day.first, event)) {
+					DeleteCounter++;
+				} else {
+					UndeletedEvents.push_back(event);
+				}
+			}
+			if (UndeletedEvents.size() == 0) {
+				db.erase(day.first);
+			} else {
+				db[day.first] = UndeletedEvents;
+			}
+		}
+		return DeleteCounter;
 	}
 
 	template<typename T>
 	std::vector<std::string> FindIf(T &predicate) const {
 		std::vector<std::string> result;
-		for(const auto &day : db){
-			for(const auto &event : day.second){
-				if(predicate(day.first, event)){
+		for (const auto &day : db) {
+			for (const auto &event : day.second) {
+				if (predicate(day.first, event)) {
 					std::ostringstream entry;
 					entry << day.first << ' ' << event;
 					result.push_back(entry.str());

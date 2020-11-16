@@ -32,8 +32,7 @@ int main() {
 			db.Add(date, event);
 		} else if (command == "Print") {
 			db.Print(std::cout);
-		}
-		else if (command == "Del") {
+		} else if (command == "Del") {
 			auto condition = ParseCondition(is);
 			auto predicate = [condition](const Date &date,
 					const std::string &event) {
@@ -41,8 +40,7 @@ int main() {
 			};
 			int count = db.RemoveIf(predicate);
 			std::cout << "Removed " << count << " entries" << std::endl;
-		}
-		else if (command == "Find") {
+		} else if (command == "Find") {
 			auto condition = ParseCondition(is);
 			auto predicate = [condition](const Date &date,
 					const std::string &event) {
@@ -54,8 +52,7 @@ int main() {
 				std::cout << entry << std::endl;
 			}
 			std::cout << "Found " << entries.size() << " entries" << std::endl;
-		}
-		else if (command == "Last") {
+		} else if (command == "Last") {
 			try {
 				std::cout << db.Last(ParseDate(is)) << std::endl;
 			} catch (std::invalid_argument&) {
@@ -116,7 +113,9 @@ void TestAddEventAndPrint() {
 			}
 		}
 		AssertEqual(output.str(),
-				"2017-01-01 Holiday\n2017-01-01 New Year\n2017-03-08 Holiday\n",
+				"2017-01-01 Holiday\n"
+				"2017-01-01 New Year\n"
+				"2017-03-08 Holiday\n",
 				"expected output");
 	}
 }
@@ -151,7 +150,9 @@ void TestAddEventAndPrintLast() {
 		}
 
 		AssertEqual(output.str(),
-				"No entries\n2017-01-01 Holiday\n2017-03-08 Holiday\n",
+				"No entries\n"
+				"2017-01-01 Holiday\n"
+				"2017-03-08 Holiday\n",
 				"expected output");
 	}
 }
@@ -189,8 +190,46 @@ void TestAddEventAndFind() {
 			}
 		}
 		AssertEqual(output.str(),
-				"2017-01-01 Holiday\n2017-01-01 New Year\n2017-03-08 Holiday\nFound 3 entries\n",
+				"2017-01-01 Holiday\n"
+				"2017-01-01 New Year\n"
+				"2017-03-08 Holiday\n"
+				"Found 3 entries\n",
 				"expected output");
+	}
+}
+
+void TestAddEventAndDeleteAndPrintRemaining() {
+	{
+		Database db;
+
+		std::istringstream commands("Add 2017-06-01 1st of June\n"
+				"Add 2017-07-08 8th of July\n"
+				"Add 2017-07-08 Someone's birthday\n"
+				"Del date == 2017-07-08\n"
+				"Print");
+		std::stringstream output;
+
+		for (std::string line; getline(commands, line);) {
+			std::istringstream is(line);
+
+			std::string command;
+			is >> command;
+			if (command == "Add") {
+				const auto date = ParseDate(is);
+				const auto event = ParseEvent(is);
+				db.Add(date, event);
+			} else if (command == "Del") {
+				auto condition = ParseCondition(is);
+				auto predicate = [condition](const Date &date,
+						const std::string &event) {
+					return condition->Evaluate(date, event);
+				};
+				int count = db.RemoveIf(predicate);
+				output << "Removed " << count << " entries" << std::endl;
+			}
+		}
+		AssertEqual(output.str(), "Removed 2 entries\n"
+				"2017-06-01 1st of June\n", "expected output");
 	}
 }
 
@@ -201,4 +240,5 @@ void TestAll() {
 	tr.RunTest(TestAddEventAndPrint, "TestAddEventAndPrint");
 	tr.RunTest(TestAddEventAndPrintLast, "TestAddEventAndPrintLast");
 	tr.RunTest(TestAddEventAndFind, "TestAddEventAndFind");
+	tr.RunTest(TestAddEventAndDeleteAndPrintRemaining, "TestAddEventAndDeleteAndPrintRemaining");
 }
