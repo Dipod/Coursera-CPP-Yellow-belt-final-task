@@ -5,6 +5,8 @@
 #include <iostream>
 #include <algorithm>
 #include <functional>
+#include <tuple>
+#include <set>
 #include "date.h"
 
 class Database {
@@ -16,5 +18,5 @@ public:
 			const std::function<bool(Date, std::string)> &predicate) const;
 	std::string Last(const Date &date) const;
 private:
-	std::map<Date, std::vector<std::string>> db;
+	std::map<Date, std::pair<std::vector<std::string>, std::set<std::string>>> db;
 };
