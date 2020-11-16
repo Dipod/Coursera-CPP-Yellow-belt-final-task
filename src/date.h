@@ -29,4 +29,4 @@ bool operator==(const Date &lhs, const Date &rhs);
 
 bool operator!=(const Date &lhs, const Date &rhs);
 
-Date ParseDate(std::istringstream &ss_date);
+Date ParseDate(std::istream &ss_date);

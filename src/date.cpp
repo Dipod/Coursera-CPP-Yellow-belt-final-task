@@ -34,7 +34,7 @@ bool operator!=(const Date &lhs, const Date &rhs) {
 	return lhs.Comparison_Key() != rhs.Comparison_Key();
 }
 
-Date ParseDate(std::istringstream &ss_date) {
+Date ParseDate(std::istream &ss_date) {
 
 	int year, month, day;
 	char separator1, separator2;
