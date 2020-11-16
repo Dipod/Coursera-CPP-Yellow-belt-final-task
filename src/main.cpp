@@ -33,28 +33,28 @@ int main() {
 		} else if (command == "Print") {
 			db.Print(std::cout);
 		}
-//		else if (command == "Del") {
-//			auto condition = ParseCondition(is);
-//			auto predicate = [condition](const Date &date,
-//					const std::string &event) {
-//				return condition->Evaluate(date, event);
-//			};
-//			int count = db.RemoveIf(predicate);
-//			std::cout << "Removed " << count << " entries" << std::endl;
-//		}
-//		else if (command == "Find") {
-//			auto condition = ParseCondition(is);
-//			auto predicate = [condition](const Date &date,
-//					const std::string &event) {
-//				return condition->Evaluate(date, event);
-//			};
-//
-//			const auto entries = db.FindIf(predicate);
-//			for (const auto &entry : entries) {
-//				std::cout << entry << std::endl;
-//			}
-//			std::cout << "Found " << entries.size() << " entries" << std::endl;
-//		}
+		else if (command == "Del") {
+			auto condition = ParseCondition(is);
+			auto predicate = [condition](const Date &date,
+					const std::string &event) {
+				return condition->Evaluate(date, event);
+			};
+			int count = db.RemoveIf(predicate);
+			std::cout << "Removed " << count << " entries" << std::endl;
+		}
+		else if (command == "Find") {
+			auto condition = ParseCondition(is);
+			auto predicate = [condition](const Date &date,
+					const std::string &event) {
+				return condition->Evaluate(date, event);
+			};
+
+			const auto entries = db.FindIf(predicate);
+			for (const auto &entry : entries) {
+				std::cout << entry << std::endl;
+			}
+			std::cout << "Found " << entries.size() << " entries" << std::endl;
+		}
 		else if (command == "Last") {
 			try {
 				std::cout << db.Last(ParseDate(is)) << std::endl;
@@ -100,7 +100,7 @@ void TestAddEventAndPrint() {
 				"Add 2017-1-1 New Year\n"
 				"Add 2017-1-1 New Year\n"
 				"Print");
-		std::stringstream output;
+		std::ostringstream output;
 
 		for (std::string line; getline(commands, line);) {
 			std::istringstream is(line);
@@ -115,14 +115,9 @@ void TestAddEventAndPrint() {
 				db.Print(output);
 			}
 		}
-		std::string line;
-		getline(output, line);
-		AssertEqual(line, "2017-01-01 Holiday", "first printed output string");
-		getline(output, line);
-		AssertEqual(line, "2017-01-01 New Year",
-				"second printed output string");
-		getline(output, line);
-		AssertEqual(line, "2017-03-08 Holiday", "third printed output string");
+		AssertEqual(output.str(),
+				"2017-01-01 Holiday\n2017-01-01 New Year\n2017-03-08 Holiday\n",
+				"expected output");
 	}
 }
 
@@ -154,13 +149,48 @@ void TestAddEventAndPrintLast() {
 				}
 			}
 		}
-		std::string line;
-		getline(output, line);
-		AssertEqual(line, "No entries", "first printed output string");
-		getline(output, line);
-		AssertEqual(line, "2017-01-01 Holiday", "second printed output string");
-		getline(output, line);
-		AssertEqual(line, "2017-03-08 Holiday", "third printed output string");
+
+		AssertEqual(output.str(),
+				"No entries\n2017-01-01 Holiday\n2017-03-08 Holiday\n",
+				"expected output");
+	}
+}
+
+void TestAddEventAndFind() {
+	{
+		Database db;
+		std::istringstream commands("Add 2017-01-01 Holiday\n"
+				"Add 2017-03-08 Holiday\n"
+				"Add 2017-01-01 New Year\n"
+				"Find event != \"working day\"\n");
+		std::stringstream output;
+
+		for (std::string line; getline(commands, line);) {
+			std::istringstream is(line);
+
+			std::string command;
+			is >> command;
+			if (command == "Add") {
+				const auto date = ParseDate(is);
+				const auto event = ParseEvent(is);
+				db.Add(date, event);
+			} else if (command == "Find") {
+				auto condition = ParseCondition(is);
+				auto predicate = [condition](const Date &date,
+						const std::string &event) {
+					return condition->Evaluate(date, event);
+				};
+
+				const auto entries = db.FindIf(predicate);
+				for (const auto &entry : entries) {
+					output << entry << std::endl;
+				}
+				output << "Found " << entries.size() << " entries" << std::endl;
+			}
+		}
+		AssertEqual(output.str(),
+				"2017-01-01 Holiday\n2017-01-01 New Year\n2017-03-08 Holiday\nFound 3 entries\n",
+				"expected output");
 	}
 }
 
@@ -170,4 +200,5 @@ void TestAll() {
 	tr.RunTest(TestParseCondition, "TestParseCondition");
 	tr.RunTest(TestAddEventAndPrint, "TestAddEventAndPrint");
 	tr.RunTest(TestAddEventAndPrintLast, "TestAddEventAndPrintLast");
+	tr.RunTest(TestAddEventAndFind, "TestAddEventAndFind");
 }
