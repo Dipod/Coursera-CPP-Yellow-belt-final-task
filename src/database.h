@@ -14,6 +14,7 @@ public:
 	template<typename T>
 	int RemoveIf(T &predicate) {
 		int DeleteCounter = 0;
+		std::vector<Date> DatesForErase;
 		for (const auto &day : db) {
 			std::vector<std::string> UndeletedEvents;
 			for (const auto &event : day.second) {
@@ -24,10 +25,13 @@ public:
 				}
 			}
 			if (UndeletedEvents.size() == 0) {
-				db.erase(day.first);
+				DatesForErase.push_back(day.first);
 			} else {
 				db[day.first] = UndeletedEvents;
 			}
+		}
+		for(const auto &date : DatesForErase){
+			db.erase(date);
 		}
 		return DeleteCounter;
 	}
