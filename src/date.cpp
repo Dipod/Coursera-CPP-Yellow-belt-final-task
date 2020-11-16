@@ -1,45 +1,37 @@
 #include "date.h"
 
+std::tuple<int, int, int> Date::Comparison_Key() const{
+	return std::make_tuple(year, month, day);
+}
+
 std::ostream& operator<<(std::ostream &stream, const Date &date) {
-	stream << std::setfill('0') << std::setw(4) << date.year << '-' << std::setw(2)
-			<< date.month << '-' << std::setw(2) << date.day;
+	stream << std::setfill('0') << std::setw(4) << date.year << '-'
+			<< std::setw(2) << date.month << '-' << std::setw(2) << date.day;
 	return stream;
 }
 
 bool operator<(const Date &lhs, const Date &rhs) {
-	auto lhs_key = std::make_tuple(lhs.year, lhs.month, lhs.day);
-	auto rhs_key = std::make_tuple(rhs.year, rhs.month, rhs.day);
-	return lhs_key < rhs_key;
+	return lhs.Comparison_Key() < rhs.Comparison_Key();
 }
 
-bool operator<=(const Date &lhs, const Date &rhs){
-	auto lhs_key = std::make_tuple(lhs.year, lhs.month, lhs.day);
-	auto rhs_key = std::make_tuple(rhs.year, rhs.month, rhs.day);
-	return lhs_key <= rhs_key;
+bool operator<=(const Date &lhs, const Date &rhs) {
+	return lhs.Comparison_Key() <= rhs.Comparison_Key();
 }
 
-bool operator>(const Date &lhs, const Date &rhs){
-	auto lhs_key = std::make_tuple(lhs.year, lhs.month, lhs.day);
-	auto rhs_key = std::make_tuple(rhs.year, rhs.month, rhs.day);
-	return lhs_key > rhs_key;
+bool operator>(const Date &lhs, const Date &rhs) {
+	return lhs.Comparison_Key() > rhs.Comparison_Key();
 }
 
-bool operator>=(const Date &lhs, const Date &rhs){
-	auto lhs_key = std::make_tuple(lhs.year, lhs.month, lhs.day);
-	auto rhs_key = std::make_tuple(rhs.year, rhs.month, rhs.day);
-	return lhs_key >= rhs_key;
+bool operator>=(const Date &lhs, const Date &rhs) {
+	return lhs.Comparison_Key() >= rhs.Comparison_Key();
 }
 
-bool operator==(const Date &lhs, const Date &rhs){
-	auto lhs_key = std::make_tuple(lhs.year, lhs.month, lhs.day);
-	auto rhs_key = std::make_tuple(rhs.year, rhs.month, rhs.day);
-	return lhs_key == rhs_key;
+bool operator==(const Date &lhs, const Date &rhs) {
+	return lhs.Comparison_Key() == rhs.Comparison_Key();
 }
 
-bool operator!=(const Date &lhs, const Date &rhs){
-	auto lhs_key = std::make_tuple(lhs.year, lhs.month, lhs.day);
-	auto rhs_key = std::make_tuple(rhs.year, rhs.month, rhs.day);
-	return lhs_key != rhs_key;
+bool operator!=(const Date &lhs, const Date &rhs) {
+	return lhs.Comparison_Key() != rhs.Comparison_Key();
 }
 
 Date ParseDate(std::istringstream &ss_date) {
@@ -49,8 +41,7 @@ Date ParseDate(std::istringstream &ss_date) {
 
 	ss_date >> year >> separator1 >> month >> separator2 >> day;
 
-	if (ss_date.fail() || separator1 != '-' || separator2 != '-'
-			|| ss_date.rdbuf()->in_avail() > 0) {
+	if (ss_date.fail() || separator1 != '-' || separator2 != '-') {
 		throw std::invalid_argument("Wrong date format");
 	} else {
 		if (month < 1 || month > 12) {

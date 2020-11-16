@@ -9,7 +9,7 @@ public:
 	Date(const int &Year, const int &Month, const int &Day) :
 			year(Year), month(Month), day(Day) {
 	}
-
+	std::tuple<int, int, int> Comparison_Key() const;
 	const int year;
 	const int month;
 	const int day;
